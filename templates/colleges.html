@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Explore Colleges</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: orange;
+            padding: 20px 0;
+        }
+
+        .search-filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .search-filter-container form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="text"],
+        select {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            outline: none;
+            min-width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: orange;
+            color: black;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff9900;
+        }
+
+        a button[type="button"] {
+            background-color: #444;
+            color: #fff;
+            margin-left: 5px;
+        }
+
+        a button[type="button"]:hover {
+            background-color: #666;
+        }
+
+        .college-card {
+            background: #1f1f1f;
+            padding: 15px;
+            margin: 15px auto;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(255, 165, 0, 0.3);
+        }
+
+        .college-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .search-filter-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Explore Colleges</h1>
+
+    <div class="search-filter-container">
+
+        <!-- Search Form -->
+        <form method="get" action="{{ url_for('colleges') }}">
+            <input type="text" name="search" placeholder="Search by name or location" value="{{ request.args.get('search', '') }}">
+            <button type="submit">Search</button>
+            <a href="{{ url_for('colleges') }}"><button type="button">Reset</button></a>
+        </form>
+
+        <!-- Filter Form -->
+        <form method="get" action="{{ url_for('colleges') }}">
+            <select name="location">
+                <option value="">Filter by Location</option>
+                <option value="Bangalore" {% if request.args.get('location') == 'Bangalore' %}selected{% endif %}>Bangalore</option>
+                <option value="Chennai" {% if request.args.get('location') == 'Chennai' %}selected{% endif %}>Chennai</option>
+                <option value="Hyderabad" {% if request.args.get('location') == 'Hyderabad' %}selected{% endif %}>Hyderabad</option>
+            </select>
+
+            <select name="fees">
+                <option value="">Filter by Fees</option>
+                <option value="low" {% if request.args.get('fees') == 'low' %}selected{% endif %}>Below ₹70,000</option>
+                <option value="medium" {% if request.args.get('fees') == 'medium' %}selected{% endif %}>₹70,000 - ₹1,00,000</option>
+                <option value="high" {% if request.args.get('fees') == 'high' %}selected{% endif %}>Above ₹1,00,000</option>
+            </select>
+
+            <button type="submit">Apply Filters</button>
+            <a href="{{ url_for('colleges') }}"><button type="button">Reset</button></a>
+        </form>
+    </div>
+
+    {% for college in colleges %}
+    <div class="college-card">
+        <h2>{{ college.name }}</h2>
+        <p><strong>Location:</strong> {{ college.location }}</p>
+        <p><strong>Fees:</strong> {{ college.fees }}</p>
+        <p><strong>Infrastructure:</strong> {{ college.infrastructure }}</p>
+        <p><strong>Placements:</strong> {{ college.placements }}</p>
+        <p><strong>Events:</strong> {{ college.events }}</p>
+        {% if college.image_url %}
+            <img src="{{ url_for('static', filename=college.image_url.split('static/')[-1]) }}" alt="{{ college.name }}">
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>College Explorer - Sign Up</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">Chandu</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Service</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="welcome-line">Join</h1>
+      <h1 class="brand-line"><span>College Explorer</span></h1>
+      <p>
+        Create your free account to explore top colleges and make informed decisions.
+      </p>
+    </div>
+
+    <!-- Signup Form -->
+    <div class="login-box">
+      <form action="/signup" method="POST">
+        <h2>Create Account</h2>
+        <input type="text" name="name" placeholder="Enter Name" required />
+        <input type="email" name="email" placeholder="Enter Email" required />
+        <input type="password" name="password" placeholder="Enter Password" required />
+        <button type="submit" class="login-btn">Sign Up</button>
+        <p class="login-text">
+             Already have an account? <a href="{{ url_for('login_form') }}">Login</a>
+          </p>
+
+        </p>
+      </form>
+    </div>
+  </section>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>College Explorer - Verify OTP</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <header class="navbar">
+    <div class="logo">Chandu</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Service</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="welcome-line">Verify</h1>
+      <h1 class="brand-line"><span>Your OTP</span></h1>
+      <p>
+        Enter the OTP sent to your Gmail to proceed with password reset.
+      </p>
+    </div>
+
+    <div class="login-box">
+      <form method="POST">
+        <h2>Enter OTP</h2>
+
+        {% if error %}
+          <p style="color: red;">{{ error }}</p>
+        {% elif success %}
+          <p style="color: green;">{{ success }}</p>
+        {% endif %}
+
+        <input type="text" name="otp" placeholder="Enter OTP" required />
+        <button type="submit" class="login-btn">Verify OTP</button>
+
+        <p class="login-text">
+          Go back to <a href="{{ url_for('login_form') }}">Login</a>
+        </p>
+      </form>
+    </div>
+  </section>
+</body>
+</html>

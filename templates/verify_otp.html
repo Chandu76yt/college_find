@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify OTP - College Explorer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .otp-box {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #888;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      opacity: 0;
+      animation: fadein 0.5s forwards;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; bottom: 10px; }
+      to { opacity: 1; bottom: 30px; }
+    }
+
+    .toast.success { background-color: #28a745; }
+    .toast.error { background-color: #dc3545; }
+
+  </style>
+</head>
+<body>
+  <div class="otp-box">
+    <h2>🔐 OTP Verification</h2>
+
+    <form method="POST" id="otpForm">
+      <input type="text" name="otp" placeholder="Enter the 6-digit OTP" required>
+      <div class="btn-group">
+        <button type="submit">Verify OTP</button>
+        <button type="submit" name="resend" value="1" id="resendBtn">Resend OTP</button>
+      </div>
+    </form>
+
+    <div class="info">
+      Please check your Gmail inbox or spam folder for the OTP.
+    </div>
+  </div>
+
+  {% if success %}
+    <div class="toast success">{{ success }}</div>
+  {% elif error %}
+    <div class="toast error">{{ error }}</div>
+  {% endif %}
+
+  <script>
+    const toast = document.querySelector('.toast');
+    if (toast) {
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 4000); // hide after 4 seconds
+    }
+
+    const resendBtn = document.getElementById('resendBtn');
+    let cooldown = sessionStorage.getItem("resendCooldown");
+
+    if (cooldown) {
+      startCooldown(parseInt(cooldown));
+    }
+
+    resendBtn.addEventListener("click", () => {
+      startCooldown(30);
+    });
+
+    function startCooldown(seconds) {
+      resendBtn.disabled = true;
+      let timeLeft = seconds;
+
+      const countdown = setInterval(() => {
+        resendBtn.textContent = `Resend OTP (${timeLeft}s)`;
+        timeLeft--;
+        sessionStorage.setItem("resendCooldown", timeLeft);
+
+        if (timeLeft < 0) {
+          clearInterval(countdown);
+          resendBtn.disabled = false;
+          resendBtn.textContent = "Resend OTP";
+          sessionStorage.removeItem("resendCooldown");
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

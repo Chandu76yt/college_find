@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>College Explorer - Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">Chandu</div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Service</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="welcome-line">Welcome To The </h1>
+      <h1 class="brand-line"><span>College Explorer</span></h1>
+      
+      <p>It is a comprehensive platform for students and colleges. <br> Selecting the right college is a crucial step in shaping a successful academic career.</p>
+
+      <p>
+        Login to explore the best colleges and your future!
+      </p>
+    </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+
+
+    <!-- Login Form -->
+    <div class="login-box">
+      <form action="/login" method="POST">
+        <h2>Login</h2>
+            {% if error %}
+            <p style="color: red; font-size: 14px;">{{ error }}</p>
+          {% endif %}      
+        <input type="email" name="email" placeholder="Enter Email" required />
+        <input type="password" name="password" placeholder="Enter Password" required />
+        <button type="submit" class="login-btn">Login</button>
+        <p class="signup-text">
+          Don't have an account? 
+          <a href="{{ url_for('signup_form') }}">Sign up here</a>
+        </p>
+        <p class="forgot-password-text">
+        <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+        </p>
+
+      </form>
+    </div>
+  </section>
+
+</body>
+</html>
