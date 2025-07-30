@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import mysql.connector
+from bson.regex import Regex
+from pymongo import MongoClient
 import smtplib
 import random
 from email.message import EmailMessage
@@ -8,19 +9,16 @@ from email.message import EmailMessage
 app = Flask(__name__)
 app.secret_key = 'chandu123@#'
 
-# ---------------- DATABASE CONNECTION ----------------
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",
-    database="college_explorer"
-)
-cursor = db.cursor(dictionary=True)
+uri = "mongodb+srv://chanduyt58:zTmpDrcURvYoNYrx@cluster0.brsszq1.mongodb.net/"
+client = MongoClient(uri)
+db = client["college-explorer"]
+collection = db["college_connect"]
+collection_colleges = db["college"]
 
 # ---------------- HOME ----------------
 @app.route('/')
 def home():
-    return "🎓 Welcome to College Explorer (Flask + MySQL working!)"
+    return "🎓 Welcome to College Explorer (Flask + MongoDB working!)"
 
 # ---------------- SIGNUP ----------------
 @app.route('/signup', methods=['GET'])
@@ -47,7 +45,7 @@ def signup_submit():
 
 def send_otp_to_email(recipient_email, otp):
     EMAIL_ADDRESS = "chandu134t@gmail.com"
-    EMAIL_PASSWORD = "qloo zxbz sujq darw"  # App password (not your Gmail password)
+    EMAIL_PASSWORD = "qloo zxbz sujq darw"
 
     msg = EmailMessage()
     msg['Subject'] = 'Your College Explorer OTP Verification'
@@ -86,16 +84,13 @@ def verify_otp():
             else:
                 return render_template('verify_otp.html', error="❌ Failed to resend OTP. Please try again later.")
 
-        # OTP check
         entered_otp = request.form.get('otp', '')
         if entered_otp == session.get('otp'):
             user = session.get('temp_user')
             hashed_password = generate_password_hash(user['password'])
 
             try:
-                cursor.execute("INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
-                               (user['name'], user['email'], hashed_password))
-                db.commit()
+                collection.insert_one({"email": user['email'], "name": user['name'], "password": hashed_password})
                 session.pop('otp', None)
                 session.pop('temp_user', None)
                 session.pop('resend_count', None)
@@ -118,11 +113,10 @@ def login_submit():
     password = request.form['password']
 
     try:
-        cursor.execute("SELECT id, name, password FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
+        user = collection.find_one({"email": email})
 
         if user and check_password_hash(user['password'], password):
-            session['user_id'] = user['id']
+            session['user_id'] = str(user['_id'])
             session['name'] = user['name']
             return redirect(url_for('colleges'))
         else:
@@ -152,43 +146,35 @@ def colleges():
     location = request.args.get('location', '').strip()
     fees_filter = request.args.get('fees', '').strip()
 
-    query = "SELECT * FROM colleges WHERE 1=1"
-    values = []
+    query = {}
 
     if search:
-        query += " AND (name LIKE %s OR location LIKE %s)"
-        values.extend([f"%{search}%", f"%{search}%"])
+        regex = Regex(f".*{search}.*", "i")
+        query["$or"] = [{"name": regex}, {"location": regex}]
 
     if location:
-        query += " AND location = %s"
-        values.append(location)
+        query["location"] = location
 
     if fees_filter:
-        query += " AND CAST(REPLACE(REPLACE(REPLACE(fees, '₹', ''), ',', ''), '/year', '') AS UNSIGNED)"
         if fees_filter == "low":
-            query += " < 70000"
+            query["fees_numeric"] = {"$lt": 70000}
         elif fees_filter == "medium":
-            query += " BETWEEN 70000 AND 100000"
+            query["fees_numeric"] = {"$gte": 70000, "$lte": 100000}
         elif fees_filter == "high":
-            query += " > 100000"
+            query["fees_numeric"] = {"$gt": 100000}
 
     try:
-        cursor.execute(query, tuple(values))
-        colleges_data = cursor.fetchall()
+        colleges_data = list(collection_colleges.find(query))
         return render_template('colleges.html', colleges=colleges_data)
     except Exception as e:
         return f"❌ Error fetching colleges: {str(e)}"
-    
 
-
-    #---------forgot password--------
-
+# ---------------- FORGOT PASSWORD ----------------
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
+        user = collection.find_one({"email": email})
         if not user:
             return render_template('forgot_password.html', error="❌ Email not registered.")
 
@@ -202,8 +188,6 @@ def forgot_password():
         else:
             return render_template('forgot_password.html', error="❌ Failed to send OTP.")
     return render_template('forgot_password.html')
-
-        #---------verify-reset-otp----------
 
 @app.route('/verify-reset-otp', methods=['GET', 'POST'])
 def verify_reset_otp():
@@ -230,18 +214,14 @@ def verify_reset_otp():
 
     return render_template('verify_reset_otp.html')
 
-#-------reset-password-------
 @app.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
     if request.method == 'POST':
         new_password = request.form['new_password']
-
         hashed_password = generate_password_hash(new_password)
-
         email = session.get('reset_email')
         try:
-            cursor.execute("UPDATE users SET password = %s WHERE email = %s", (hashed_password, email))
-            db.commit()
+            collection.update_one({"email": email}, {"$set": {"password": hashed_password}})
             session.pop('reset_email', None)
             session.pop('reset_otp', None)
             session.pop('reset_resend_count', None)
@@ -251,7 +231,6 @@ def reset_password():
             return render_template('reset_password.html', error=f"❌ Failed to reset password: {str(e)}")
 
     return render_template('reset_password.html')
-
 
 # ---------------- RUN APP ----------------
 if __name__ == '__main__':
