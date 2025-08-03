@@ -1,6 +1,37 @@
+import os
+import sqlite3
+
+# Only create DB if it doesn't exist
+if not os.path.exists("college_explorer.db"):
+    conn = sqlite3.connect("college_explorer.db")
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS college_connect (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        location TEXT,
+        infrastructure TEXT,
+        fees TEXT,
+        events TEXT,
+        placements TEXT
+    )''')
+
+    conn.commit()
+    conn.close()
+
+
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import mysql.connector
+import sqlite3
 import smtplib
 import random
 from email.message import EmailMessage
@@ -9,13 +40,8 @@ app = Flask(__name__)
 app.secret_key = 'chandu123@#'
 
 # MySQL DB connection
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",
-    database="college_explorer"
-)
-cursor = db.cursor(dictionary=True)
+db = sqlite3.connect("college_explorer.db", check_same_thread=False)
+cursor = db.cursor()
 
 # ---------------- HOME ----------------
 @app.route('/')
@@ -104,7 +130,7 @@ def verify_otp():
 # ---------------- LOGIN ----------------
 @app.route('/login', methods=['GET'])
 def login_form():
-    return render_template('login.html')
+    return render_template('index.html')
 
 @app.route('/login', methods=['POST'])
 def login_submit():
